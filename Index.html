@@ -192,6 +192,11 @@ html,body{height:100%;background:var(--cream);font-family:'DM Sans',sans-serif;f
 .page{display:none}
 .page.active{display:block}
 .hide{display:none!important}
+.inline-form{background:var(--white);border:1px solid var(--div);border-radius:var(--radius);padding:20px;margin-bottom:20px;animation:slideIn .25s ease both;}
+.inline-form-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:500;color:var(--ink);margin-bottom:16px;}
+.btn-add-page{flex-shrink:0;padding:8px 16px;border-radius:20px;background:var(--gold);color:var(--white);border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.btn-add-page:active{transform:scale(.96);}
+.btn-add-page.open{background:var(--cream-mid);color:var(--ink-m);}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 @keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes scaleIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
@@ -248,17 +253,75 @@ html,body{height:100%;background:var(--cream);font-family:'DM Sans',sans-serif;f
 
     <!-- KANTONG PAGE -->
     <div class="page active" id="page-kantong">
+      <!-- Summary strip -->
       <div class="summary-strip">
         <div class="strip-cell"><div class="strip-num" id="sum-total">0</div><div class="strip-label">Kantong</div></div>
         <div class="strip-cell"><div class="strip-num pos" id="sum-saldo">Rp 0</div><div class="strip-label">Total Saldo</div></div>
         <div class="strip-cell"><div class="strip-num" id="sum-best">-</div><div class="strip-label">Terbesar</div></div>
       </div>
-      <div class="sec-title">Kantong Dana</div>
+
+      <!-- Tambah Kantong inline form -->
+      <div class="inline-form" id="form-kantong" style="display:none;">
+        <div class="inline-form-title">Tambah Kantong</div>
+        <div class="field"><label>Jenis Kantong</label>
+          <div class="jenis-sel">
+            <div class="jenis-opt sel bank" onclick="selJenis('bank',this)"><div class="ji">🏦</div><div class="jl">Bank</div></div>
+            <div class="jenis-opt ewallet" onclick="selJenis('ewallet',this)"><div class="ji">💸</div><div class="jl">E-Wallet</div></div>
+            <div class="jenis-opt cash" onclick="selJenis('cash',this)"><div class="ji">💵</div><div class="jl">Cash</div></div>
+          </div>
+        </div>
+        <div class="field"><label>Nama Kantong</label><input type="text" id="inp-nama" placeholder="Contoh: BCA, GoPay, Dompet..." maxlength="30"></div>
+        <div class="field"><label>Saldo Awal</label><input type="text" id="inp-saldo" placeholder="Rp 0" inputmode="numeric"></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-outline" style="margin-top:0;flex:1;" onclick="toggleFormKantong()">Batal</button>
+          <button class="btn-primary" id="btn-k" style="flex:2;" onclick="simpanKantong()">Simpan Kantong</button>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div class="sec-title" style="margin-bottom:0;flex:1;">Kantong Dana</div>
+        <button class="btn-add-page" id="btn-show-form-kantong" onclick="toggleFormKantong()">＋ Tambah</button>
+      </div>
       <div class="kantong-list" id="kantong-list"></div>
     </div>
 
     <!-- TRANSAKSI PAGE -->
     <div class="page" id="page-transaksi">
+
+      <!-- Input Transaksi inline -->
+      <div class="inline-form" id="form-tx" style="display:none;">
+        <div class="inline-form-title">Catat Transaksi</div>
+        <div class="field"><label>Jenis</label>
+          <div class="tx-type-sel">
+            <div class="tx-opt sel income" onclick="selTxType('income',this)"><div class="ti">💰</div><div class="tl">Masuk</div></div>
+            <div class="tx-opt expense" onclick="selTxType('expense',this)"><div class="ti">💸</div><div class="tl">Keluar</div></div>
+            <div class="tx-opt transfer" onclick="selTxType('transfer',this)"><div class="ti">↔️</div><div class="tl">Transfer</div></div>
+          </div>
+        </div>
+        <div class="field"><label>Nominal</label><input type="text" id="tx-nom" placeholder="Rp 0" inputmode="numeric"></div>
+        <div class="field"><label id="lbl-sumber">Sumber / Keterangan</label><input type="text" id="tx-sumber" placeholder="Contoh: Gaji, Makan siang..." maxlength="50"></div>
+        <div id="fld-kat" class="hide">
+          <div class="field"><label>Kategori Pengeluaran</label><div class="kat-chips" id="kat-chips"></div></div>
+        </div>
+        <div class="field"><label id="lbl-kdari">Kantong</label><select id="tx-kdari"></select></div>
+        <div id="fld-kke" class="hide">
+          <div class="field"><label>Ke Kantong</label><select id="tx-kke"></select></div>
+        </div>
+        <div class="field"><label>Tanggal</label><input type="date" id="tx-tgl"></div>
+        <div class="field"><label>Catatan (opsional)</label><textarea id="tx-cat" placeholder="Tambah catatan..."></textarea></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-outline" style="margin-top:0;flex:1;" onclick="toggleFormTx()">Batal</button>
+          <button class="btn-primary" id="btn-tx" style="flex:2;" onclick="simpanTx()">Simpan</button>
+        </div>
+      </div>
+
+      <!-- Header + tombol tambah -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div class="sec-title" style="margin-bottom:0;flex:1;">Riwayat Transaksi</div>
+        <button class="btn-add-page" id="btn-show-form-tx" onclick="toggleFormTx()">＋ Catat</button>
+      </div>
+
+      <!-- Filter -->
       <div class="transaksi-filters">
         <div class="filter-chip active" onclick="setTxFilter('semua',this)">Semua</div>
         <div class="filter-chip" onclick="setTxFilter('income',this)">Pemasukan</div>
@@ -364,57 +427,6 @@ html,body{height:100%;background:var(--cream);font-family:'DM Sans',sans-serif;f
     <div class="nav-item" id="nav-monitoring" onclick="goPage('monitoring')"><div class="nav-icon">📊</div><span>Monitor</span></div>
     <div class="nav-item" id="nav-settings" onclick="goPage('settings')"><div class="nav-icon">⚙️</div><span>Settings</span></div>
   </nav>
-</div>
-
-<!-- MODAL KANTONG -->
-<div class="modal-overlay" id="m-kantong">
-  <div class="modal-sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-head"><h2>Tambah Kantong</h2><p>Pilih jenis dan isi detail kantong</p></div>
-    <div class="sheet-body">
-      <div class="field"><label>Jenis Kantong</label>
-        <div class="jenis-sel">
-          <div class="jenis-opt sel bank" onclick="selJenis('bank',this)"><div class="ji">🏦</div><div class="jl">Bank</div></div>
-          <div class="jenis-opt ewallet" onclick="selJenis('ewallet',this)"><div class="ji">💸</div><div class="jl">E-Wallet</div></div>
-          <div class="jenis-opt cash" onclick="selJenis('cash',this)"><div class="ji">💵</div><div class="jl">Cash</div></div>
-        </div>
-      </div>
-      <div class="field"><label>Nama Kantong</label><input type="text" id="inp-nama" placeholder="Contoh: BCA, GoPay..." maxlength="30"></div>
-      <div class="field"><label>Saldo Awal</label><input type="text" id="inp-saldo" placeholder="Rp 0" inputmode="numeric"></div>
-      <button class="btn-primary" id="btn-k" onclick="simpanKantong()">Simpan Kantong</button>
-      <button class="btn-outline" onclick="closeModal('m-kantong')">Batal</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL TRANSAKSI -->
-<div class="modal-overlay" id="m-tx">
-  <div class="modal-sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-head"><h2>Tambah Transaksi</h2><p>Catat pemasukan, pengeluaran, atau transfer</p></div>
-    <div class="sheet-body">
-      <div class="field"><label>Jenis</label>
-        <div class="tx-type-sel">
-          <div class="tx-opt sel income" onclick="selTxType('income',this)"><div class="ti">💰</div><div class="tl">Masuk</div></div>
-          <div class="tx-opt expense" onclick="selTxType('expense',this)"><div class="ti">💸</div><div class="tl">Keluar</div></div>
-          <div class="tx-opt transfer" onclick="selTxType('transfer',this)"><div class="ti">↔️</div><div class="tl">Transfer</div></div>
-        </div>
-      </div>
-      <div class="field"><label>Nominal</label><input type="text" id="tx-nom" placeholder="Rp 0" inputmode="numeric"></div>
-      <div class="field"><label id="lbl-sumber">Sumber / Keterangan</label><input type="text" id="tx-sumber" placeholder="Contoh: Gaji, Makan..." maxlength="50"></div>
-      <div id="fld-kat" class="hide">
-        <div class="field"><label>Kategori</label><div class="kat-chips" id="kat-chips"></div></div>
-      </div>
-      <div class="field"><label id="lbl-kdari">Kantong</label><select id="tx-kdari"></select></div>
-      <div id="fld-kke" class="hide">
-        <div class="field"><label>Ke Kantong</label><select id="tx-kke"></select></div>
-      </div>
-      <div class="field"><label>Tanggal</label><input type="date" id="tx-tgl"></div>
-      <div class="field"><label>Catatan (opsional)</label><textarea id="tx-cat" placeholder="Tambah catatan..."></textarea></div>
-      <button class="btn-primary" id="btn-tx" onclick="simpanTx()">Simpan Transaksi</button>
-      <button class="btn-outline" onclick="closeModal('m-tx')">Batal</button>
-    </div>
-  </div>
 </div>
 
 <!-- MODAL BUDGET -->
@@ -600,14 +612,28 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',function(e){if(e.target===this)closeModal(this.id);}));
 
+function toggleFormKantong(forceOpen){
+  const form=document.getElementById('form-kantong');
+  const btn=document.getElementById('btn-show-form-kantong');
+  const isOpen=form.style.display!=='none'&&form.style.display!=='';
+  if(isOpen&&!forceOpen){form.style.display='none';if(btn){btn.classList.remove('open');btn.textContent='＋ Tambah';}}
+  else{
+    selJenisVal='bank';
+    document.querySelectorAll('.jenis-opt').forEach(e=>e.classList.remove('sel'));
+    document.querySelector('.jenis-opt.bank').classList.add('sel');
+    document.getElementById('inp-nama').value='';
+    document.getElementById('inp-saldo').value='';
+    form.style.display='block';
+    if(btn){btn.classList.add('open');btn.textContent='✕ Tutup';}
+    setTimeout(()=>{document.getElementById('inp-nama').focus();form.scrollIntoView({behavior:'smooth',block:'nearest'});},100);
+  }
+}
 function openKantongModal(){
-  selJenisVal='bank';
-  document.querySelectorAll('.jenis-opt').forEach(e=>e.classList.remove('sel'));
-  document.querySelector('.jenis-opt.bank').classList.add('sel');
-  document.getElementById('inp-nama').value='';
-  document.getElementById('inp-saldo').value='';
-  openModal('m-kantong');
-  setTimeout(()=>document.getElementById('inp-nama').focus(),400);
+  goPage('kantong');
+  setTimeout(()=>{
+    const f=document.getElementById('form-kantong');
+    if(f.style.display==='none'||f.style.display==='')toggleFormKantong(true);
+  },200);
 }
 function selJenis(j,el){
   selJenisVal=j;
@@ -627,7 +653,7 @@ async function simpanKantong(){
   const {data,error}=await db.from('kantong').insert([{nama,jenis:selJenisVal,saldo,user_id:user.id}]).select();
   busy=false;btn.innerHTML='Simpan Kantong';btn.disabled=false;
   if(error){toast('⚠️ '+error.message);return;}
-  kantongData.push(data[0]);renderKantong();renderSummary();updateProfile();closeModal('m-kantong');
+  kantongData.push(data[0]);renderKantong();renderSummary();updateProfile();toggleFormKantong();
   toast('✓ Kantong '+nama+' ditambahkan');
 }
 
@@ -639,8 +665,7 @@ function updateKSelects(){
   document.getElementById('tx-kke').innerHTML=opts;
   document.getElementById('bud-kat').innerHTML=getAllKat().map(k=>`<option value="${esc(k.nama)}">${k.icon} ${esc(k.nama)}</option>`).join('');
 }
-function openTxModal(){
-  if(!kantongData.length){toast('⚠️ Tambah kantong dulu');openKantongModal();return;}
+function resetTxForm(){
   selTxTypeVal='income';selKat=null;
   document.querySelectorAll('.tx-opt').forEach(e=>e.classList.remove('sel'));
   document.querySelector('.tx-opt.income').classList.add('sel');
@@ -653,8 +678,26 @@ function openTxModal(){
   document.getElementById('fld-kat').classList.add('hide');
   document.getElementById('fld-kke').classList.add('hide');
   updateKSelects();renderKatChips();
-  openModal('m-tx');
-  setTimeout(()=>document.getElementById('tx-nom').focus(),400);
+}
+function toggleFormTx(forceOpen){
+  if(!kantongData.length){toast('⚠️ Tambah kantong dulu');openKantongModal();return;}
+  const form=document.getElementById('form-tx');
+  const btn=document.getElementById('btn-show-form-tx');
+  const isOpen=form.style.display!=='none'&&form.style.display!=='';
+  if(isOpen&&!forceOpen){form.style.display='none';if(btn){btn.classList.remove('open');btn.textContent='＋ Catat';}}
+  else{
+    resetTxForm();
+    form.style.display='block';
+    if(btn){btn.classList.add('open');btn.textContent='✕ Tutup';}
+    setTimeout(()=>{document.getElementById('tx-nom').focus();form.scrollIntoView({behavior:'smooth',block:'nearest'});},100);
+  }
+}
+function openTxModal(){
+  goPage('transaksi');
+  setTimeout(()=>{
+    const f=document.getElementById('form-tx');
+    if(f.style.display==='none'||f.style.display==='')toggleFormTx(true);
+  },200);
 }
 function selTxType(t,el){
   selTxTypeVal=t;
@@ -694,13 +737,17 @@ async function simpanTx(){
       if(kd){kd.saldo-=nom;await db.from('kantong').update({saldo:kd.saldo}).eq('id',kd.id);}
       if(kk){kk.saldo+=nom;await db.from('kantong').update({saldo:kk.saldo}).eq('id',kk.id);}}
     txData.unshift(data[0]);renderKantong();renderSummary();renderTx();updateMon();updateProfile();
-    closeModal('m-tx');toast('✓ Transaksi disimpan');
+    toggleFormTx();toast('✓ Transaksi disimpan');
   }else toast('⚠️ '+error.message);
   busy=false;btn.innerHTML='Simpan Transaksi';btn.disabled=false;
 }
 function openTransferFrom(id){
   if(kantongData.length<2){toast('⚠️ Butuh minimal 2 kantong');return;}
-  openTxModal();setTimeout(()=>{selTxType('transfer',document.querySelector('.tx-opt.transfer'));document.getElementById('tx-kdari').value=id;},150);
+  goPage('transaksi');
+  setTimeout(()=>{
+    toggleFormTx(true);
+    setTimeout(()=>{selTxType('transfer',document.querySelector('.tx-opt.transfer'));document.getElementById('tx-kdari').value=id;},100);
+  },200);
 }
 
 // ── RENDER TX ──
@@ -953,7 +1000,8 @@ function goPage(page){
 }
 document.getElementById('nav-fab').addEventListener('click',()=>{
   const active=document.querySelector('.page.active');
-  if(active?.id==='page-kantong')openKantongModal();else openTxModal();
+  if(active?.id==='page-kantong')toggleFormKantong();
+  else{goPage('transaksi');setTimeout(()=>toggleFormTx(true),200);}
 });
 
 // ── PROFILE ──
