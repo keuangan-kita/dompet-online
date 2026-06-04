@@ -725,7 +725,11 @@ function updateTopbar(){
 // ── AUTH
 function showAuth(){document.getElementById('app').style.display='none';document.getElementById('auth-page').style.display='flex';}
 function switchTab(t){
-  ['login','reg'].forEach(x=>{document.getElementById('tab-'+x).classList.toggle('active',x===t);document.getElementById('sect-'+x).classList.toggle('active',x===t);});
+  const isLogin = (t === 'login');
+  document.getElementById('tab-login').classList.toggle('active', isLogin);
+  document.getElementById('tab-reg').classList.toggle('active', !isLogin);
+  document.getElementById('sect-login').classList.toggle('active', isLogin);
+  document.getElementById('sect-reg').classList.toggle('active', !isLogin);
 }
 async function doLogin(){
   const email=document.getElementById('l-email').value.trim(),pass=document.getElementById('l-pass').value;
