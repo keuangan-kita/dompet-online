@@ -972,16 +972,27 @@ function toggleFormKantong(){
 }
 function selJenis(j,el){selJenisVal=j;document.querySelectorAll('.jenis-opt').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');}
 document.getElementById('inp-saldo').addEventListener('input',function(){const v=this.value.replace(/\D/g,'');this.value=v?'Rp '+parseInt(v).toLocaleString('id-ID'):'';});
-async function simpanKantong(){
-  const nama=document.getElementById('inp-nama').value.trim();
-  const saldo=parseInt(document.getElementById('inp-saldo').value.replace(/\D/g,''))||0;
-  if(!nama){toast('⚠️ Nama kantong wajib diisi');return;}
-  if(busy)return;busy=true;
-  const btn=document.getElementById('btn-k');btn.innerHTML='<span class="spinner"></span>';btn.disabled=true;
-  const{data,error}=await db.from('kantong').insert([{nama,jenis:selJenisVal,saldo,user_id:user.id}]).select();
-  busy=false;btn.innerHTML='Simpan Kantong';btn.disabled=false;
-  if(error){toast('⚠️ '+error.message);return;}
-  kantongData.push(data[0]);renderKantong();renderHero();updateProfile();toggleFormKantong();toast('✓ Kantong '+nama+' ditambahkan');
+async function simpanKantong() {
+  const nama = document.getElementById('inp-nama').value.trim();
+  const saldo = parseInt(document.getElementById('inp-saldo').value.replace(/\D/g, '')) || 0;
+  if (!nama) { toast('⚠️ Nama kantong wajib diisi'); return; }
+  
+  // CEK SESSION DULU
+  const { data: { session } } = await db.auth.getSession();
+  console.log('Session:', session);
+  console.log('User ID:', session?.user?.id);
+  
+  if (!session) { toast('⚠️ Sesi habis, silakan login ulang'); return; }
+  
+  if (busy) return; busy = true;
+  const btn = document.getElementById('btn-k'); btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
+  const { data, error } = await db.from('kantong').insert([{ nama, jenis: selJenisVal, saldo, user_id: session.user.id }]).select();
+  busy = false; btn.innerHTML = 'Simpan Kantong'; btn.disabled = false;
+  if (error) { toast('⚠️ ' + error.message); console.error(error); return; }
+  kantongData.push(data[0]);
+  renderKantong(); renderHero(); updateProfile();
+  toggleFormKantong();
+  toast('✓ Kantong ' + nama + ' ditambahkan');
 }
 
 // ── TRANSAKSI
