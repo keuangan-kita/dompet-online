@@ -9,7 +9,7 @@
 <!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, refreshProfileUI, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, doc, addDoc, getDoc, getDocs, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -132,7 +132,7 @@ window.doRegister = async function() {
   const btn = document.getElementById('btn-reg'); btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
-    await updateProfile(cred.user, { displayName: name });
+    await refreshProfileUI(cred.user, { displayName: name });
     currentUser = cred.user;
     saveLoginHistory();
     toast('✓ Akun berhasil dibuat!');
@@ -193,9 +193,9 @@ window.editNama = async function() {
   const nama = document.getElementById('inp-newname').value.trim();
   if (!nama) { toast('⚠️ Nama tidak boleh kosong'); return; }
   try {
-    await updateProfile(auth.currentUser, { displayName: nama });
+    await refreshProfileUI(auth.currentUser, { displayName: nama });
     currentUser = auth.currentUser;
-    updateTopbar(); updateProfile(); closeModal('m-editname'); toast('✓ Nama berhasil diperbarui');
+    updateTopbar(); refreshProfileUI(); closeModal('m-editname'); toast('✓ Nama berhasil diperbarui');
   } catch(e) { toast('⚠️ Gagal update nama'); }
 };
 
@@ -207,16 +207,17 @@ window.uploadFoto = async function(inp) {
   const reader = new FileReader();
   reader.onload = async (e) => {
     try {
-      await updateProfile(auth.currentUser, { photoURL: e.target.result });
+      await refreshProfileUI(auth.currentUser, { photoURL: e.target.result });
       currentUser = auth.currentUser;
-      updateTopbar(); updateProfile(); toast('✓ Foto profil diperbarui');
+      updateTopbar(); refreshProfileUI(); toast('✓ Foto profil diperbarui');
     } catch(err) { toast('⚠️ Gagal upload foto'); }
   };
   reader.readAsDataURL(file);
 };
 
 // ── PROFILE
-function updateProfile() {
+// UBAH NAMA FUNGSI INI
+function refreshProfileUI() {
   if (!currentUser) return;
   const n = currentUser.displayName || currentUser.email?.split('@')[0] || 'User';
   const foto = currentUser.photoURL;
@@ -233,8 +234,9 @@ function updateProfile() {
   document.getElementById('pf-tx').textContent = txData.length;
   document.getElementById('pf-sal').textContent = fmtShort(kantongData.reduce((s,k)=>s+(k.saldo||0),0));
   document.getElementById('tog-dark')?.classList.toggle('on',(localStorage.getItem('theme')||'light')==='dark');
+  
+  // KODE SEBELUMNYA YANG REKURSIF (Bikin crash) SUDAH DIHAPUS DARI SINI
 }
-
 // ── HAPUS AKUN
 window.konfirmasiHapusAkun = function() {
   hapusId = 'akun'; hapusType = 'akun';
@@ -255,7 +257,7 @@ async function loadKantong() {
     const q = query(col('kantong'), orderBy('createdAt', 'asc'));
     const snap = await getDocs(q);
     kantongData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderKantong(); renderHero(); updateProfile();
+    renderKantong(); renderHero(); refreshProfileUI();
   } catch(e) { toast('⚠️ Gagal load kantong: ' + e.message); }
 }
 async function loadTx() {
@@ -264,7 +266,7 @@ async function loadTx() {
     const q = query(col('transaksi'), orderBy('tanggal', 'desc'));
     const snap = await getDocs(q);
     txData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderTx(); updateTxSum(); updateMon(); updateProfile();
+    renderTx(); updateTxSum(); updateMon(); refreshProfileUI();
   } catch(e) { console.error(e); }
 }
 async function loadBudget() {
@@ -369,7 +371,7 @@ window.simpanKantong = async function() {
   try {
     const docRef = await addDoc(col('kantong'), { nama, jenis: selJenisVal, saldo, createdAt: serverTimestamp() });
     kantongData.push({ id: docRef.id, nama, jenis: selJenisVal, saldo });
-    renderKantong(); renderHero(); updateProfile();
+    renderKantong(); renderHero(); refreshProfileUI();
     toggleFormKantong();
     toast('✓ Kantong ' + nama + ' ditambahkan');
   } catch(e) { toast('⚠️ ' + e.message); }
@@ -446,7 +448,7 @@ window.simpanTx = async function() {
       if (kk2) { kk2.saldo += nom; await updateDoc(userDoc('kantong', kk2.id), {saldo: kk2.saldo}); }
     }
     txData.unshift({ id: docRef.id, ...rec });
-    renderKantong(); renderHero(); renderTx(); updateTxSum(); updateMon(); updateProfile();
+    renderKantong(); renderHero(); renderTx(); updateTxSum(); updateMon(); refreshProfileUI();
     toggleFormTx(); toast('✓ Transaksi disimpan');
   } catch(e) { toast('⚠️ ' + e.message); }
   busy = false; btn.innerHTML = 'Simpan Transaksi'; btn.disabled = false;
@@ -711,7 +713,7 @@ window.confirmHapus = async function() {
   try{
     if(hapusType==='kantong'){
       await deleteDoc(userDoc('kantong',hapusId));
-      kantongData=kantongData.filter(k=>k.id!==hapusId);renderKantong();renderHero();updateProfile();
+      kantongData=kantongData.filter(k=>k.id!==hapusId);renderKantong();renderHero();refreshProfileUI();
     } else if(hapusType==='transaksi'){
       await deleteDoc(userDoc('transaksi',hapusId));
       if(hapusTxExtra){
@@ -720,7 +722,7 @@ window.confirmHapus = async function() {
         else if(type==='expense'){const k=kantongData.find(k=>k.id===kantongId);if(k){k.saldo+=nominal;await updateDoc(userDoc('kantong',k.id),{saldo:k.saldo});}}
         else{const kd=kantongData.find(k=>k.id===kantongId),kk=kantongData.find(k=>k.id===kantongKeId);if(kd){kd.saldo+=nominal;await updateDoc(userDoc('kantong',kd.id),{saldo:kd.saldo});}if(kk){kk.saldo-=nominal;await updateDoc(userDoc('kantong',kk.id),{saldo:kk.saldo});}}
       }
-      txData=txData.filter(t=>t.id!==hapusId);renderKantong();renderHero();renderTx();updateTxSum();updateMon();updateProfile();
+      txData=txData.filter(t=>t.id!==hapusId);renderKantong();renderHero();renderTx();updateTxSum();updateMon();refreshProfileUI();
     } else if(hapusType==='akun'){
       // hapus semua koleksi
       const cols=['kantong','transaksi','budget','goals','kategori_custom'];
@@ -743,7 +745,7 @@ window.goPage = function(page) {
   document.getElementById('page-'+page)?.classList.add('active');
   document.getElementById('nav-'+page)?.classList.add('active');
   if(page==='monitoring')updateMon();
-  if(page==='profile'){updateProfile();renderLoginHistory();renderBudget();renderGoals();renderKatCustom();updateKSelects();}
+  if(page==='profile'){refreshProfileUI();renderLoginHistory();renderBudget();renderGoals();renderKatCustom();updateKSelects();}
 };
 
 // ── UTILS
