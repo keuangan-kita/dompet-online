@@ -983,8 +983,26 @@ async function simpanKantong(){
   const saldo=parseInt(document.getElementById('inp-saldo').value.replace(/\D/g,''))||0;
   if(!nama){toast('⚠️ Nama kantong wajib diisi');return;}
   if(busy)return;busy=true;
+  
+  // 1. Ambil session aktif yang valid langsung dari engine Supabase
+  const { data: { session }, error: sessionError } = await db.auth.getSession();
+  
+  if (sessionError || !session || !session.user) {
+    toast('⚠️ Sesi login habis atau tidak valid. Silakan login ulang.');
+    busy = false;
+    return;
+  }
+
   const btn=document.getElementById('btn-k');btn.innerHTML='<span class="spinner"></span>';btn.disabled=true;
-  const{data,error}=await db.from('kantong').insert([{nama,jenis:selJenisVal,saldo,user_id:user.id}]).select();
+  
+  // 2. Gunakan session.user.id yang dijamin 100% akurat sesuai token JWT browser
+  const{data,error}=await db.from('kantong').insert([{
+    nama,
+    jenis:selJenisVal,
+    saldo,
+    user_id:session.user.id
+  }]).select();
+  
   busy=false;btn.innerHTML='Simpan Kantong';btn.disabled=false;
   if(error){toast('⚠️ '+error.message);return;}
   kantongData.push(data[0]);renderKantong();renderHero();updateProfile();toggleFormKantong();toast('✓ Kantong '+nama+' ditambahkan');
@@ -1039,7 +1057,8 @@ async function simpanTx(){
   if(selTxTypeVal==='transfer'&&kdari===kke){toast('⚠️ Kantong asal & tujuan harus berbeda');return;}
   if(busy)return;busy=true;
   const btn=document.getElementById('btn-tx');btn.innerHTML='<span class="spinner"></span>';btn.disabled=true;
-  const rec={user_id:user.id,type:selTxTypeVal,nominal:nom,sumber:sumber||(selTxTypeVal==='income'?'Pemasukan':'Transaksi'),kategori:selTxTypeVal==='expense'?selKat:selTxTypeVal==='income'?'Pemasukan':'Transfer',kantong_id:kdari,kantong_ke_id:selTxTypeVal==='transfer'?kke:null,catatan:cat,tanggal:tgl};
+ const { data: { session } } = await db.auth.getSession();
+const rec={user_id:session.user.id,type:selTxTypeVal,...};
   const{data,error}=await db.from('transaksi').insert([rec]).select();
   if(!error){
     if(selTxTypeVal==='income'){const k=kantongData.find(k=>k.id===kdari);if(k){k.saldo+=nom;await db.from('kantong').update({saldo:k.saldo}).eq('id',k.id);}}
