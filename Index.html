@@ -667,18 +667,16 @@ html,body{height:100%;background:var(--bg);font-family:'Plus Jakarta Sans',sans-
 <div class="toast" id="toast"></div>
 
 <script>
-// ── CONFIG — ganti SKEY dengan anon key JWT dari Supabase ──
-const SURL = 'https://lhulwnqggunmsrmpnqsk.supabase.co';
-const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxodWx3bnFnZ3VubXNybXBucXNrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDQzNDkwMCwiZXhwIjoyMDk2MDEwOTAwfQ.vCOpVb7n5yR1qV2u9HF-jNKh1Ta0KVYE7G-gWcWOMLQ'; // ← ganti jika perlu
-
-const { createClient } = supabase;
-const db = createClient(SURL, SKEY);
-
-let user=null, kantongData=[], txData=[], budgetData=[], goalsData=[], katCustom=[];
-let selJenisVal='bank', selTxTypeVal='income', selKat=null;
-let hapusId=null, hapusType=null, hapusTxExtra=null;
-let busy=false, txFilter='semua', period='semua', fKantong='semua', fKat='semua';
-let chartInst=null, chartPieInst=null, pieMode='kat';
+const SURL='https://lhulwnqggunmsrmpnqsk.supabase.co';
+const SKEY='sb_publishable_adB9FINdOQ9okNyNHfZf_A_2mif3YHR';
+const {createClient}=supabase;
+const db=createClient(SURL,SKEY);
+ 
+let user=null,kantongData=[],txData=[],budgetData=[],goalsData=[],katCustom=[];
+let selJenisVal='bank',selTxTypeVal='income',selKat=null;
+let hapusId=null,hapusType=null,hapusTxExtra=null;
+let busy=false,txFilter='semua',period='semua',fKantong='semua',fKat='semua';
+let chartInst=null,chartPieInst=null,pieMode='kat';
 let loginHistory=[];
 
 const DEF_KAT=[
