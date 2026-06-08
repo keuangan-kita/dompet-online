@@ -285,6 +285,19 @@ html,body{height:100%;background:var(--bg);font-family:'Plus Jakarta Sans',sans-
 @keyframes spin{to{transform:rotate(360deg)}}
 .spinner{width:16px;height:16px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block;vertical-align:middle}
 </style>
+  <link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#121212">
+
+<script>
+  // Daftarkan Service Worker otomatis
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('PWA: Service Worker berhasil terdaftar!', reg))
+        .catch(err => console.log('PWA: Gagal daftar Service Worker', err));
+    });
+  }
+</script>
 </head>
 <body>
 <div class="loading-screen" id="loading">
